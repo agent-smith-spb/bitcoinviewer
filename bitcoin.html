@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+h1 { text-align: center; }
+</style>
+<body>
+<h1 id="btc"></h1>
+
+<img src="http://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=1UGL55DCB7PF8K6U85xx3EXYiSPHfzTLj">
+<p>1UGL55DCB7PF8K6U85xx3EXYiSPHfzTLj</p>
+<p id="status">...monitoring...</p>
+
+<script>
+var btcs = new WebSocket("wss://ws.blockchain.info/inv");
+//more on API at: https://blockchain.info/api/api_websocket
+btcs.onopen = function() {
+	//btcs.send(JSON.stringify({"op":"addr_sub", "addr":"1UGL55DCB7PF8K6U85xx3EXYiSPHfzTLj"}));
+	btcs.send(JSON.stringify({"op":"unconfirmed_sub"}));
+}
+btcs.onmessage = function(onmsg) {
+	var response = JSON.parse(onmsg.data);
+	var getout = response.x.out;
+	var countouts = getout.length;
+	document.getElementById("status").innerHTML += "<p>";
+	var total = 0;
+	for(var i=0; i<countouts; i++) {
+		//document.getElementById("status").innerHTML += ;
+		//document.getElementById("status").innerHTML += response.x.out[i].value;
+			var amount = response.x.out[i].value;
+			var convBTC = amount/100000000;
+			var convUSD = convBTC * 4000;
+			total += convUSD;
+		if(convUSD >1000000) {
+			document.getElementById("status").innerHTML += "<span style='color:red;'>" + response.x.out[i].addr 
+			+ " received: $" + convUSD.toFixed(2) + "</span><br>";
+		} else if(convUSD > 100000) {
+			document.getElementById("status").innerHTML += "<span style='color:green;'>" + response.x.out[i].addr 
+			+ " received: $" + convUSD.toFixed(2) + "</span><br>";
+		} else {
+			//document.getElementById("status").innerHTML += "<span style='color:black;'>" + response.x.out[i].addr 
+			+ " received: $" + convUSD.toFixed(2) + "</span><br>";
+		}
+	}
+	if(total>100000) {
+	document.getElementById("status").innerHTML += "<strong>" + new Date() + " - TOTAL: $" + total.toFixed(2) + "</strong></p>";	
+	}
+}	
+</script>
+
+<!--
+<script src="https://gateway.gear.mycelium.com/gear-widget-host.js"></script>
+<iframe id="gear-widget" scrolling="no" src="https://gateway.gear.mycelium.com/widgets/272cd51b844689e5c26dc7c9b133f934f34848da33103bb1bbd7810352e6eeaa" style="border: none; display: inline-block; height: 350px; min-width: 250px; max-width: 350px;"></iframe>
+-->
+
+<script>
+var ws = new WebSocket("wss://api2.bitfinex.com:3000/ws");
+
+ws.onopen = function() {
+	ws.send(JSON.stringify({"event":"subscribe", "channel":"ticker", "pair":"BTCUSD"}))
+};
+
+ws.onmessage = function(msg) {
+	var response = JSON.parse(msg.data);
+	var hb = response[1];
+	var bid = response[1];
+	var ask = response[3];
+	var last = response[7];
+	
+	if(hb != "hb") {
+		document.getElementById("btc").innerHTML = "Current Bid: " + bid + " Last: " + last + " Current Ask: " + ask;
+	}
+};
+</script>
+</body>
+</html>
